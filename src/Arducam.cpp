@@ -3,6 +3,8 @@
 #endif
 #include "Arducam.hpp"
 
+#define USB_CPLD_I2C_ADDRESS 0x46
+
 bool ArducamCamera::openCamera(std::string fname, int index) {
 	return camera_initFromFile(fname, this->handle, this->cameraCfg, index);
 }
@@ -69,4 +71,28 @@ bool ArducamCamera::read(ArduCamOutData* &frameData, int timeout) {
 
 void ArducamCamera::returnFrameBuffer() {
 	ArduCam_del(handle);
+}
+
+void ArducamCamera::dumpDeviceInfo() {
+	Uint32 ret = 0, version = 0;
+	Cpld_info_t cpld_info;
+	ret = ArduCam_readReg_8_8(handle, USB_CPLD_I2C_ADDRESS, 0x00, &version);
+	ret = ArduCam_readReg_8_8(handle, USB_CPLD_I2C_ADDRESS, 0x05, &cpld_info.year);
+	ret = ArduCam_readReg_8_8(handle, USB_CPLD_I2C_ADDRESS, 0x06, &cpld_info.mouth);
+	ret = ArduCam_readReg_8_8(handle, USB_CPLD_I2C_ADDRESS, 0x07, &cpld_info.day);
+
+	std::string version_str = "v" + std::to_string(version >> 4) + "." + std::to_string(version & 0x0F);
+	strcpy(cpld_info.version, version_str.c_str());
+
+	printf("CPLD version: %s year: %d mouth: %d day: %d\n", cpld_info.version, cpld_info.year, cpld_info.mouth, cpld_info.day);
+
+	Uint8 data[16];
+	Usb_info_t usb_info;
+	ret = ArduCam_getboardConfig(handle, 0x80, 0x00, 0x00, 2, data);
+	Uint8 usbType = cameraCfg.usbType;
+	usb_info.interface_type = usbType == 4 ? 2 : 3;
+	usb_info.device_type = usbType == 3 || usbType == 4 ? 3 : 2;
+	std::string data_str = "v" + std::to_string(data[0] & 0xFF) + "." + std::to_string(data[1] & 0xFF);
+	strcpy(usb_info.fw_version, data_str.c_str());
+	printf("fw_version: %s interface_type: %d device_type: %d\n", usb_info.fw_version, usb_info.interface_type, usb_info.device_type);
 }

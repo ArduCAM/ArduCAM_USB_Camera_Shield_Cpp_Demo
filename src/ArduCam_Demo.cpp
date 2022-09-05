@@ -50,6 +50,7 @@ static void display_fps(int index) {
 }
 
 void display(ArducamCamera *camera, int index) {
+	camera->dumpDeviceInfo();
 	while (true) {
 		ArduCamOutData* frameData;
 		if (!camera->read(frameData)) {
