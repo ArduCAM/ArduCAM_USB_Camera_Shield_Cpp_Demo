@@ -21,6 +21,19 @@
 #include "Utils.h"
 #include "Semaphore.hpp"
 
+typedef struct {
+	char version[16];
+	Uint32 year;
+	Uint32 mouth; 
+	Uint32 day;
+} Cpld_info_t;
+
+typedef struct {
+	char fw_version[16];
+	Uint32 interface_type;
+	Uint32 device_type;
+} Usb_info_t;
+
 class ArducamCamera {
 public:
 	ArducamCamera(){}
@@ -34,6 +47,8 @@ public:
 
 	bool read(ArduCamOutData* &frameData, int timeout = 1500);
 	void returnFrameBuffer();
+
+	void dumpDeviceInfo();
 
 private:
 	void capture();
