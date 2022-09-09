@@ -17,6 +17,6 @@ extern bool save_raw;
 extern int color_mode;
 extern ArduCamCfg cameraCfg;
 void showHelp();
-bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, ArduCamCfg &cameraCfg, int index = 0);
-cv::Mat ConvertImage(ArduCamOutData* frameData);
+bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, ArduCamCfg &cameraCfg, int &color_mode, int index = 0);
+cv::Mat ConvertImage(ArduCamOutData* frameData, int color_mode);
 #endif // !

@@ -15,16 +15,9 @@
 #include "Utils.h"
 #include <time.h>
 
-bool save_raw = false;
-int color_mode = 0;
-
 void showHelp() {
-	printf(" usage: sudo ./ArduCam_Demo <path/config-file-name>	\
-			\n\n example: sudo ./ArduCam_Demo ../Config/AR0134_960p_Color.cfg	\
-			\n\n While the program is running, you can press the following buttons in the terminal:	\
-			\n\n 's':Save the image to the images folder.	\
-			\n\n 'c':Stop saving images.	\
-			\n\n 'q':Stop running the program.	\
+	printf(" usage: sudo ./ArduCam_Demo <path/config-file-name> <path/tunning-file-name>	\
+			\n\n example: sudo ./ArduCam_Demo ../Config/IMX219/IMX219_MIPI_2Lane_RAW8b_640x480_30fps.cfg data/imx219.json	\
 			\n\n");
 }
 
@@ -45,9 +38,10 @@ void configBoard(ArduCamHandle &cameraHandle, Config config) {
  * @param cameraCfg :camera config struct
  * @return TURE or FALSE
  * */
-bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, ArduCamCfg &cameraCfg, int index) {
+bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, ArduCamCfg &cameraCfg, int &color_mode, int index) {
 	CameraConfigs cam_cfgs;
 	memset(&cam_cfgs, 0x00, sizeof(CameraConfigs));
+	memset(&cameraCfg, 0x00, sizeof(ArduCamCfg));
 	if (arducam_parse_config(filename.c_str(), &cam_cfgs)) {
 		std::cout << "Cannot find configuration file." << std::endl << std::endl;
 		showHelp();
@@ -89,11 +83,10 @@ bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, Ardu
 	}
 	else if (cameraCfg.u8PixelBits > 8 && cameraCfg.u8PixelBits <= 16) {
 		cameraCfg.u8PixelBytes = 2;
-		save_raw = true;
 	}
 
 	int ret_val = ArduCam_open(cameraHandle, &cameraCfg, index);
-	//int ret_val = ArduCam_autoopen(cameraHandle, &cameraCfg);
+	// int ret_val = ArduCam_autoopen(cameraHandle, &cameraCfg);
 	if (ret_val == USB_CAMERA_NO_ERROR) {
 		//ArduCam_enableForceRead(cameraHandle);	//Force display image
 		for (int i = 0; i < configs_length; i++) {
@@ -117,6 +110,7 @@ bool camera_initFromFile(std::string filename, ArduCamHandle &cameraHandle, Ardu
 				break;
 			}
 		}
+		ArduCam_registerCtrls(cameraHandle, cam_cfgs.controls, cam_cfgs.controls_length);
 		unsigned char u8TmpData[16];
 		ArduCam_readUserData(cameraHandle, 0x400 - 16, 16, u8TmpData);
 		printf("Serial: %c%c%c%c-%c%c%c%c-%c%c%c%c\n",
@@ -174,7 +168,7 @@ cv::Mat separationImage(Uint8* bytes, int width, int height)
 #define RGB565_RED      0xf800
 #define RGB565_GREEN    0x07e0
 #define RGB565_BLUE     0x001f
-cv::Mat RGB565toMat(Uint8* bytes, int width, int height) {
+cv::Mat RGB565toMat(Uint8* bytes, int width, int height, int color_mode) {
 	unsigned char* temp_data, *ptdata, *data, *data_end;
 
 	data = bytes;
@@ -235,7 +229,37 @@ cv::Mat BytestoMat(Uint8* bytes, int width, int height)
 	return image;
 }
 
-cv::Mat ConvertImage(ArduCamOutData* frameData) {
+cv::Mat UnpackRaw10(ArduCamOutData* frameData, int drop_row) {
+	Uint8* data = frameData->pu8ImageData;
+	ArduCamCfg cameraCfg = frameData->stImagePara;
+	int height, width;
+	width = cameraCfg.u32Width * 0.8;
+	height = cameraCfg.u32Height - abs(drop_row);
+	int stride = cameraCfg.u32Width;
+	cv::Mat rawImage = cv::Mat(height, width, CV_16UC1);
+	int index = 0;
+	int start = 0;
+	int end = cameraCfg.u32Height;
+
+	if (drop_row > 0) {
+		start = drop_row;
+	} else if(drop_row < 0) {
+		end += drop_row;
+	}
+
+	for (int i = start; i < end; i+=1) {
+		for (int j = 0; j < cameraCfg.u32Width; j+= 5) {
+			int lsb = data[i*cameraCfg.u32Width + j + 4];
+			rawImage.at<uint16_t>(index++) = (data[i*cameraCfg.u32Width + j + 0] << 2) | ((lsb >> 6) & 0x03);
+			rawImage.at<uint16_t>(index++) = (data[i*cameraCfg.u32Width + j + 1] << 2) | ((lsb >> 4) & 0x03);
+			rawImage.at<uint16_t>(index++) = (data[i*cameraCfg.u32Width + j + 2] << 2) | ((lsb >> 2) & 0x03);
+			rawImage.at<uint16_t>(index++) = (data[i*cameraCfg.u32Width + j + 3] << 2) | ((lsb >> 0) & 0x03);
+		}
+	}
+	return rawImage;
+}
+
+cv::Mat ConvertImage(ArduCamOutData* frameData, int color_mode) {
 	cv::Mat rawImage;
 	Uint8* data = frameData->pu8ImageData;
 	ArduCamCfg cameraCfg = frameData->stImagePara;
@@ -245,7 +269,7 @@ cv::Mat ConvertImage(ArduCamOutData* frameData) {
 
 	switch (cameraCfg.emImageFmtMode) {
 	case FORMAT_MODE_RGB:
-		rawImage = RGB565toMat(data, width, height);
+		rawImage = RGB565toMat(data, width, height, color_mode);
 		break;
 	case FORMAT_MODE_RAW_D:
 		rawImage = separationImage(data, width, height);

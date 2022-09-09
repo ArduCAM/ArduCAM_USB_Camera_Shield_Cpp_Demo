@@ -21,19 +21,6 @@
 #include "Utils.h"
 #include "Semaphore.hpp"
 
-typedef struct {
-	char version[16];
-	Uint32 year;
-	Uint32 mouth; 
-	Uint32 day;
-} Cpld_info_t;
-
-typedef struct {
-	char fw_version[16];
-	Uint32 interface_type;
-	Uint32 device_type;
-} Usb_info_t;
-
 class ArducamCamera {
 public:
 	ArducamCamera(){}
@@ -50,6 +37,16 @@ public:
 
 	void dumpDeviceInfo();
 
+	int setCtrl(std::string name, int64_t val);
+	uint32_t writeReg_8_8(uint32_t i2cAddr, uint32_t regAddr, uint32_t val);
+
+public:
+	int rows = 0;
+	int cols = 0;
+	int color_mode;
+	format_mode format;
+	ArduCamCfg cameraCfg = {};
+
 private:
 	void capture();
 
@@ -57,7 +54,5 @@ private:
 	Semaphore captureSem;
 	std::thread captureThread;
 	ArduCamHandle handle = nullptr;
-	ArduCamCfg cameraCfg;
 	volatile bool _running = false;
-
 };
