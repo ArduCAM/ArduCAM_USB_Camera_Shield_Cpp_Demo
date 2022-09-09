@@ -14,6 +14,18 @@
 ![env-3](resources/images/opencv/env-3.png)
 ![env-4](resources/images/opencv/env-4.png)
 
+### Install Driver
+
+[Dowload Driver](https://github.com/ArduCAM/ArduCAM_USB_Camera_Shield/releases/download/install_drivers/install_USB_Camera_Drivers.zip)
+
+![driver](resources/images/driver/driver.png)
+
+Unzip the package after the download is complete.
+
+Double-click to execute the install_driver.bat file.
+
+![driver](resources/images/driver/install_driver.png)
+
 ### Build
 
 1. Command Line Compilation

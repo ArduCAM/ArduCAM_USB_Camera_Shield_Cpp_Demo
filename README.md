@@ -19,9 +19,24 @@ sudo apt update
 sudo apt install arducam-config-parser-dev arducam-usb-sdk-dev
 ```
 
+### set udev rules
+
+[Download script](https://github.com/ArduCAM/ArduCAM_USB_Camera_Shield/releases/download/install_drivers/configure_udev_rules.sh)
+
+![udev](resources/images/driver/udev.png)
+
+execute script
+
+```
+sudo chmod +x configure_udev_rules.sh
+./configure_udev_rules.sh
+```
+
 ### Build
 
 ```
+git clone https://github.com/ArduCAM/ArduCAM_USB_Camera_Shield_Cpp_Demo.git
+cd ArduCAM_USB_Camera_Shield_Cpp_Demo
 mkdir build && cd build
 cmake ..
 make -j2

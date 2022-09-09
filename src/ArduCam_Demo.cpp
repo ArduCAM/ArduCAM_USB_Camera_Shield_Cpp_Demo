@@ -50,14 +50,13 @@ static void display_fps(int index) {
 }
 
 void display(ArducamCamera *camera, int index) {
-	camera->dumpDeviceInfo();
 	while (true) {
 		ArduCamOutData* frameData;
 		if (!camera->read(frameData)) {
 			std::cout << "read frame failed." << std::endl;
 			continue;
 		}
-		cv::Mat image = ConvertImage(frameData);
+		cv::Mat image = ConvertImage(frameData, camera->color_mode);
 		camera->returnFrameBuffer();
 		if (!image.data) {
 			std::cout << "No image data" << std::endl;
@@ -102,6 +101,7 @@ int main(int argc,char **argv)
 		return 0;
 	}
 
+	camera->dumpDeviceInfo();
 	camera->start();
 	std::thread camera_display(display, camera, 0);
 
