@@ -16,8 +16,8 @@
 #include <time.h>
 
 void showHelp() {
-	printf(" usage: sudo ./ArduCam_Demo <path/config-file-name> <path/tunning-file-name>	\
-			\n\n example: sudo ./ArduCam_Demo ../Config/IMX219/IMX219_MIPI_2Lane_RAW8b_640x480_30fps.cfg data/imx219.json	\
+	printf(" usage: sudo ./ArduCam_Demo <path/config-file-name>		\
+			\n\n example: sudo ./ArduCam_Demo ../Config/IMX219/IMX219_MIPI_2Lane_RAW8b_640x480_30fps.cfg	\
 			\n\n");
 }
 
