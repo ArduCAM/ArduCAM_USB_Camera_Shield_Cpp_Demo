@@ -86,24 +86,29 @@ void display(ArducamCamera *camera, int index) {
 int main(int argc,char **argv)
 {
 	const char * config_file_name;
-	if(argc > 1){
+	int deviceID;
+	if(argc == 2){
 		config_file_name = argv[1];
-	}else{
+		deviceID = 0;
+	} else if (argc > 2) {
+		config_file_name = argv[1];
+		deviceID = atoi(argv[2]);
+	} else {
 		showHelp();
 		return 0;
 	}
 
 
 	ArducamCamera *camera = new ArducamCamera();
-	
-	if (!camera->openCamera(config_file_name, 0)) {
+	printf("Select Device ID: %d\n", deviceID);
+	if (!camera->openCamera(config_file_name, deviceID)) {
 		std::cout << "Failed to open camera." << std::endl;
 		return 0;
 	}
 
 	camera->dumpDeviceInfo();
 	camera->start();
-	std::thread camera_display(display, camera, 0);
+	std::thread camera_display(display, camera, deviceID);
 
 	camera_display.join();
 	return 0;
