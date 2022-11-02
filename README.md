@@ -44,8 +44,16 @@ make -j2
 
 ### Run
 
+The default device number is equal to 0
+
 ```
 ./Arducam_Opencv_Demo <path/config-file-name>
+```
+
+select device
+
+```
+./Arducam_Opencv_Demo <path/config-file-name> 1
 ```
 
 **Note: Configuration files can be found here: [ArduCAM_USB_Camera_Shield](https://github.com/ArduCAM/ArduCAM_USB_Camera_Shield/tree/master/Config)**
