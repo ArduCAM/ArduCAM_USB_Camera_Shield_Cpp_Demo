@@ -54,7 +54,8 @@ Enter the Release directory to see the compiled executable program.
 
 ![exe](resources/images/build_img/build_exe.png)
 
-Copy the compiled executable program to the same folder of the dynamic link library.
+Copy the compiled executable program to the same folder of the dynamic link library.  
+(**Note: You need to go to the opencv installation directory and copy opencv_world\*.dll**)  
 
 ![copy_exe](resources/images/build_img/copy.png)
 
